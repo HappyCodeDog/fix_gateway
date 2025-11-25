@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: fix-gateway
+
+server:
+  port: 8080
+
+fix:
+  session:
+    # 发送方配置
+    sender-comp-id: GATEWAY_CLIENT
+    # 接收方配置
+    target-comp-id: GATEWAY_SERVER
+    # 目标主机和端口
+    socket-connect-host: localhost
+    socket-connect-port: 9876
+    # 会话配置
+    begin-string: FIX.4.4
+    # TLS配置
+    socket-use-ssl: Y
+    ssl-protocol: TLSv1.2
+    # 心跳间隔（秒）
+    heartbeat-interval: 30
+    # 日志配置
+    file-log-path: logs
+    # 消息存储类型（内存）
+    message-store-factory: memory
+
