@@ -8,30 +8,38 @@ server:
 fix:
   # 多个broker配置列表
   brokers:
+    # 使用QuickFixJ标准配置文件格式（推荐方式）
+    # 多个broker可以共享同一个配置文件，通过SessionID信息区分
     - broker-id: broker1
+      config-file: fix/sessions.cfg
+      # 指定SessionID信息以匹配配置文件中的特定session
+      begin-string: FIX.4.4
       sender-comp-id: GATEWAY_CLIENT_1
       target-comp-id: GATEWAY_SERVER_1
-      socket-connect-host: localhost
-      socket-connect-port: 9876
-      begin-string: FIX.4.4
-      socket-use-ssl: Y
-      ssl-protocol: TLSv1.2
-      heartbeat-interval: 30
-      file-log-path: logs/broker1
-      message-store-factory: memory
-      reconnect-interval: 60
     - broker-id: broker2
+      config-file: fix/sessions.cfg
+      # 指定SessionID信息以匹配配置文件中的特定session
+      begin-string: FIX.4.4
       sender-comp-id: GATEWAY_CLIENT_2
       target-comp-id: GATEWAY_SERVER_2
-      socket-connect-host: localhost
-      socket-connect-port: 9877
-      begin-string: FIX.4.4
-      socket-use-ssl: Y
-      ssl-protocol: TLSv1.2
-      heartbeat-interval: 30
-      file-log-path: logs/broker2
-      message-store-factory: memory
-      reconnect-interval: 60
+    # 也可以为每个broker使用独立的配置文件
+    # - broker-id: broker1
+    #   config-file: fix/broker1.cfg
+    # - broker-id: broker2
+    #   config-file: fix/broker2.cfg
+    # 也可以使用代码方式配置（向后兼容，如果未指定config-file则使用以下字段）
+    # - broker-id: broker3
+    #   sender-comp-id: GATEWAY_CLIENT_3
+    #   target-comp-id: GATEWAY_SERVER_3
+    #   socket-connect-host: localhost
+    #   socket-connect-port: 9878
+    #   begin-string: FIX.4.4
+    #   socket-use-ssl: Y
+    #   ssl-protocol: TLSv1.2
+    #   heartbeat-interval: 30
+    #   file-log-path: logs/broker3
+    #   message-store-factory: memory
+    #   reconnect-interval: 60
   # 向后兼容的单个session配置（如果brokers列表为空，将使用此配置）
   session:
     sender-comp-id: GATEWAY_CLIENT

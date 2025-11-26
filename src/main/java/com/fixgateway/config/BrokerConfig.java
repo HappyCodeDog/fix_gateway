@@ -48,7 +48,13 @@ public class BrokerConfig {
         private String brokerId;
 
         /**
-         * 发送方CompID
+         * QuickFixJ配置文件路径（相对于classpath或绝对路径）
+         * 如果指定了此路径，将使用QuickFixJ标准配置文件格式加载配置
+         */
+        private String configFile;
+
+        /**
+         * 发送方CompID（如果使用configFile，此字段可选）
          */
         private String senderCompId;
 
