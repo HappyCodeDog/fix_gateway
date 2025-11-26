@@ -33,12 +33,25 @@ public class TradeCaptureController {
             @RequestBody TradeCaptureRequest request) {
         
         try {
-            log.info("Received TradeCaptureReport request: tradeReportID={}, tradeRequestType={}", 
-                    request.getTradeReportID(), request.getTradeRequestType());
+            log.info("Received TradeCaptureReport request: brokerId={}, tradeReportID={}, tradeRequestType={}", 
+                    request.getBrokerId(), request.getTradeReportID(), request.getTradeRequestType());
             
             // 发送FIX请求
-            CompletableFuture<TradeCaptureReport> future = fixMessageService
-                    .requestTradeCaptureReport(request.getTradeReportID(), request.getTradeRequestType());
+            CompletableFuture<TradeCaptureReport> future;
+            if (request.getBrokerId() != null && !request.getBrokerId().isEmpty()) {
+                // 使用指定的broker
+                future = fixMessageService.requestTradeCaptureReport(
+                    request.getBrokerId(), 
+                    request.getTradeReportID(), 
+                    request.getTradeRequestType()
+                );
+            } else {
+                // 使用向后兼容的方法（默认使用第一个broker）
+                future = fixMessageService.requestTradeCaptureReport(
+                    request.getTradeReportID(), 
+                    request.getTradeRequestType()
+                );
+            }
             
             // 等待响应（带超时）
             TradeCaptureReport report = future.get(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS);

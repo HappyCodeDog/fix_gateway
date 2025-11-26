@@ -19,10 +19,26 @@ import java.util.concurrent.TimeoutException;
 public class FixMessageService {
 
     private final FixApplication fixApplication;
-    private final SessionID sessionID;
+    private final com.fixgateway.config.FixSessionConfig fixSessionConfig;
 
-    public CompletableFuture<TradeCaptureReport> requestTradeCaptureReport(String tradeReportID, String tradeRequestType) {
+    /**
+     * 根据brokerId发送TradeCaptureReportRequest
+     * @param brokerId broker标识
+     * @param tradeReportID 交易报告ID
+     * @param tradeRequestType 交易请求类型
+     * @return CompletableFuture<TradeCaptureReport>
+     */
+    public CompletableFuture<TradeCaptureReport> requestTradeCaptureReport(
+            String brokerId, String tradeReportID, String tradeRequestType) {
         try {
+            SessionID sessionID = fixSessionConfig.getSessionId(brokerId);
+            if (sessionID == null) {
+                log.error("Session not found for broker: {}", brokerId);
+                CompletableFuture<TradeCaptureReport> failed = new CompletableFuture<>();
+                failed.completeExceptionally(new RuntimeException("FIX session not found for broker: " + brokerId));
+                return failed;
+            }
+
             // 生成唯一的请求ID
             String tradeRequestID = UUID.randomUUID().toString();
             
@@ -40,24 +56,49 @@ public class FixMessageService {
             
             // 发送请求
             Session.sendToTarget(request, sessionID);
-            log.info("Sent TradeCaptureReportRequest with TradeRequestID: {}", tradeRequestID);
+            log.info("Sent TradeCaptureReportRequest to broker {} with TradeRequestID: {}", brokerId, tradeRequestID);
             
             return future;
         } catch (SessionNotFound e) {
-            log.error("Session not found: {}", sessionID, e);
+            log.error("Session not found for broker: {}", brokerId, e);
             CompletableFuture<TradeCaptureReport> failed = new CompletableFuture<>();
-            failed.completeExceptionally(new RuntimeException("FIX session not found", e));
+            failed.completeExceptionally(new RuntimeException("FIX session not found for broker: " + brokerId, e));
             return failed;
         } catch (Exception e) {
-            log.error("Error sending TradeCaptureReportRequest", e);
+            log.error("Error sending TradeCaptureReportRequest to broker: {}", brokerId, e);
             CompletableFuture<TradeCaptureReport> failed = new CompletableFuture<>();
             failed.completeExceptionally(e);
             return failed;
         }
     }
 
-    public CompletableFuture<TradeCaptureReport> requestTradeCaptureReport(String tradeReportID) {
-        return requestTradeCaptureReport(tradeReportID, null);
+    /**
+     * 根据brokerId发送TradeCaptureReportRequest（使用默认请求类型）
+     * @param brokerId broker标识
+     * @param tradeReportID 交易报告ID
+     * @return CompletableFuture<TradeCaptureReport>
+     */
+    public CompletableFuture<TradeCaptureReport> requestTradeCaptureReport(String brokerId, String tradeReportID) {
+        return requestTradeCaptureReport(brokerId, tradeReportID, null);
+    }
+
+    /**
+     * 使用第一个可用的broker发送TradeCaptureReportRequest（向后兼容）
+     * @param tradeReportID 交易报告ID
+     * @param tradeRequestType 交易请求类型
+     * @return CompletableFuture<TradeCaptureReport>
+     */
+    public CompletableFuture<TradeCaptureReport> requestTradeCaptureReport(String tradeReportID, String tradeRequestType) {
+        List<String> brokerIds = fixSessionConfig.getBrokerIds();
+        if (brokerIds == null || brokerIds.isEmpty()) {
+            CompletableFuture<TradeCaptureReport> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new RuntimeException("No broker configured"));
+            return failed;
+        }
+        // 使用第一个broker
+        String defaultBrokerId = brokerIds.get(0);
+        log.info("Using default broker: {} for backward compatibility", defaultBrokerId);
+        return requestTradeCaptureReport(defaultBrokerId, tradeReportID, tradeRequestType);
     }
 }
 

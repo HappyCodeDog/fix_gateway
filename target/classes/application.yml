@@ -6,23 +6,42 @@ server:
   port: 8080
 
 fix:
+  # 多个broker配置列表
+  brokers:
+    - broker-id: broker1
+      sender-comp-id: GATEWAY_CLIENT_1
+      target-comp-id: GATEWAY_SERVER_1
+      socket-connect-host: localhost
+      socket-connect-port: 9876
+      begin-string: FIX.4.4
+      socket-use-ssl: Y
+      ssl-protocol: TLSv1.2
+      heartbeat-interval: 30
+      file-log-path: logs/broker1
+      message-store-factory: memory
+      reconnect-interval: 60
+    - broker-id: broker2
+      sender-comp-id: GATEWAY_CLIENT_2
+      target-comp-id: GATEWAY_SERVER_2
+      socket-connect-host: localhost
+      socket-connect-port: 9877
+      begin-string: FIX.4.4
+      socket-use-ssl: Y
+      ssl-protocol: TLSv1.2
+      heartbeat-interval: 30
+      file-log-path: logs/broker2
+      message-store-factory: memory
+      reconnect-interval: 60
+  # 向后兼容的单个session配置（如果brokers列表为空，将使用此配置）
   session:
-    # 发送方配置
     sender-comp-id: GATEWAY_CLIENT
-    # 接收方配置
     target-comp-id: GATEWAY_SERVER
-    # 目标主机和端口
     socket-connect-host: localhost
     socket-connect-port: 9876
-    # 会话配置
     begin-string: FIX.4.4
-    # TLS配置
     socket-use-ssl: Y
     ssl-protocol: TLSv1.2
-    # 心跳间隔（秒）
     heartbeat-interval: 30
-    # 日志配置
     file-log-path: logs
-    # 消息存储类型（内存）
     message-store-factory: memory
 
